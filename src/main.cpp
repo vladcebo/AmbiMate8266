@@ -1,11 +1,18 @@
 #include "freertos/FreeRTOS.h"
 #include "esp_common.h"
 #include "gpio.h"
+#include "AmbiMate.h"
+
+extern "C" {
+    #include "tinystdio.h"
+}
 
 extern "C" {
     void user_init(void);
     uint32 user_rf_cal_sector_set(void);
 }
+
+static AmbiMate sens;
 
 #define LED_PIN GPIO_Pin_2
 
@@ -46,19 +53,34 @@ uint32 user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
+char buff[100];
+
 void test_task(void *pvParameters) {
-    GPIO_AS_OUTPUT(LED_PIN);
-    int led_status = 0;
+
+    if (!sens.init()) {
+        os_printf("Could not initialize AmbiMate sensor. Wrong version\n");
+    }
     while (1) {
-        led_status ^= 1;
-        GPIO_OUTPUT(LED_PIN, led_status);
-        os_printf("I'm ok. Thank you\n");
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        sens.scanAll();
+        vTaskDelay(500 / portTICK_RATE_MS);
+        sens.sampleAll();
+        tfp_sprintf(buff, "temperature = %2.2f C\n",   sens.getTemperature());
+        os_printf("%s", buff);
+        tfp_sprintf(buff, "humidity    = %2.2f %%\n",  sens.getHumidity());
+        os_printf("%s", buff);
+        tfp_sprintf(buff, "temperature = %2.2f lux\n", sens.getLight());
+        os_printf("%s", buff);
+
+        vTaskDelay(200 / portTICK_RATE_MS);
     }
 }
 
+
 void user_init(void) {
     os_printf("SDK version:%s\n", system_get_sdk_version());
-    xTaskCreate(test_task, (const signed char*)"My task", 100, NULL, 1, NULL);
+
+    I2C::init();
+
+    xTaskCreate(test_task, (const signed char*)"My task", 200, NULL, 1, NULL);
 }
 
