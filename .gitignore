@@ -5,3 +5,4 @@
 .vscode/launch.json
 .vscode/ipch
 .travis.yml
+include/wifi_config.h
