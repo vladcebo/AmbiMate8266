@@ -3,8 +3,8 @@
 #include "gpio.h"
 #include "AmbiMate.h"
 #include "wifi_config.h"
-#include "espconn.h"
 #include "WifiStation.hpp"
+#include "HttpClient.hpp"
 
 extern "C" {
     #include "tinystdio.h"
@@ -36,9 +36,14 @@ void main_task(void *pvParameters) {
 
         if (WifiStation::isConnected()) {
 
+            /* Prepare payload */
+            tfp_sprintf(buff, "{\"temperature\": %2.2f, \"humidity\" : %2.2f, \"light\": %2.2f}",
+                sens.getTemperature(), sens.getHumidity(), sens.getLight());
+            HttpClient::post("demo.thingsboard.io", 80, "/api/v1/giTqgcEj2cDdoYj8XcO4/telemetry", 
+            "Content-Type:application/json\n", buff);
         }
         /* Prepare and send data as a JSON */
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(500 / portTICK_RATE_MS);
     }
 }
 
@@ -47,10 +52,10 @@ void user_init(void) {
 
     os_printf("SDK version:%s\n", system_get_sdk_version());
 
-    espconn_init();
     I2C::init();
     WifiStation::start(WIFI_SSID, WIFI_PASSWORD);
+    HttpClient::init();
 
-    xTaskCreate(main_task, (const signed char*)"Main task", 500, NULL, 1, NULL);
+    xTaskCreate(main_task, (const signed char*)"Main task", 2000, NULL, 1, NULL);
 }
 

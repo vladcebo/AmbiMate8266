@@ -2,22 +2,15 @@
 #define HTTP_CLIENT_H_
 
 #include "c_types.h"
+#include "esp_common.h"
+#include "espconn.h"
+
 class HttpClient {
     
 public:
+    static void ICACHE_FLASH_ATTR init(void);
+    static void ICACHE_FLASH_ATTR post(const char* host, int port, const char* path, const char* headers, const char* payload);
 
-    typedef struct http_req_s {
-        char* host;
-        char* path;
-        int   port;
-        char* payload;
-        char* headers;
-    } http_req_t;
-
-    static void ICACHE_FLASH_ATTR post(const char* host);
-
-private:
-    static void ICACHE_FLASH_ATTR request(const char* host, int port);
 };
 
 
