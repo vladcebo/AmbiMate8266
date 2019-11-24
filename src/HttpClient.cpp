@@ -19,62 +19,62 @@ static char* ICACHE_FLASH_ATTR strdup(const char* str) {
 
 static void ICACHE_FLASH_ATTR receive_cb(void * arg, char * buf, unsigned short len)
 {
-	/* Do nothing on receive */
+    /* Do nothing on receive */
 }
 
 static void ICACHE_FLASH_ATTR sent_cb(void * arg)
 {
-	struct espconn * conn = (struct espconn *)arg;
-	http_req_t * req      = (http_req_t *)conn->reserve;
+    struct espconn * conn = (struct espconn *)arg;
+    http_req_t * req      = (http_req_t *)conn->reserve;
 
-	if (req->payload == NULL) {
+    if (req->payload == NULL) {
         os_printf("Message sent successufully\n");
-	}
-	else {
+    }
+    else {
         // Send the payload
-		os_printf("Sending request body\n");
+        os_printf("Sending request body\n");
         os_printf("%s\n", req->payload);
-		espconn_sent(conn, (uint8_t *)req->payload, strlen(req->payload));
-		free(req->payload);
-		req->payload = NULL;
-	}
+        espconn_sent(conn, (uint8_t *)req->payload, strlen(req->payload));
+        free(req->payload);
+        req->payload = NULL;
+    }
 }
 
 static void ICACHE_FLASH_ATTR connect_cb(void* arg) {
 
     os_printf("TCP Connection successful\n");
 
-	struct espconn* conn = (struct espconn*) arg;
-	http_req_t*     req  = (http_req_t*) conn->reserve;
+    struct espconn* conn = (struct espconn*) arg;
+    http_req_t*     req  = (http_req_t*) conn->reserve;
 
-	espconn_regist_recvcb(conn, receive_cb);
-	espconn_regist_sentcb(conn, sent_cb);
+    espconn_regist_recvcb(conn, receive_cb);
+    espconn_regist_sentcb(conn, sent_cb);
 
-	char post_headers[32] = "";
+    char post_headers[32] = "";
 
-	if (req->payload != NULL) {
-		sprintf(post_headers, "Content-Length: %d\r\n", strlen(req->payload));
-	}
+    if (req->payload != NULL) {
+        sprintf(post_headers, "Content-Length: %d\r\n", strlen(req->payload));
+    }
 
-	/* Prepare POST request */
-	char buf[73 + strlen(req->path) + strlen(req->host) +
-			 strlen(req->headers) + strlen(post_headers)];
-	int len = sprintf(buf,
-						 "POST %s HTTP/1.1\r\n"
-						 "Host: %s:%d\r\n"
-						 "Connection: close\r\n"
-						 "User-Agent: ESP8266\r\n"
-						 "%s"
-						 "%s"
-						 "\r\n",
-						req->path, req->host, req->port, req->headers, post_headers);
+    /* Prepare POST request */
+    char buf[73 + strlen(req->path) + strlen(req->host) +
+             strlen(req->headers) + strlen(post_headers)];
+    int len = sprintf(buf,
+                         "POST %s HTTP/1.1\r\n"
+                         "Host: %s:%d\r\n"
+                         "Connection: close\r\n"
+                         "User-Agent: ESP8266\r\n"
+                         "%s"
+                         "%s"
+                         "\r\n",
+                        req->path, req->host, req->port, req->headers, post_headers);
 
     os_printf("Sending request header:\n%s\n", buf);
 
-	espconn_sent(conn, (uint8_t *)buf, len);
-	// we need them no more
-	os_free(req->headers);
-	req->headers = NULL;
+    espconn_sent(conn, (uint8_t *)buf, len);
+    // we need them no more
+    os_free(req->headers);
+    req->headers = NULL;
 }
 
 static void ICACHE_FLASH_ATTR disconnect_cb(void* arg) {
@@ -82,20 +82,20 @@ static void ICACHE_FLASH_ATTR disconnect_cb(void* arg) {
     os_printf("TCP Disconnected. \n");
 
     struct espconn* conn = (struct espconn*) arg;
-	if (conn == NULL) {
-		return;
-	}
-	http_req_t*     req  = (http_req_t*) conn->reserve;
+    if (conn == NULL) {
+        return;
+    }
+    http_req_t*     req  = (http_req_t*) conn->reserve;
     if (req != NULL) {
         free(req->host);
-		free(req->path);
-		free(req);
-	}
-	espconn_delete(conn);
-	if(conn->proto.tcp != NULL) {
-		os_free(conn->proto.tcp);
-	}
-	os_free(conn);
+        free(req->path);
+        free(req);
+    }
+    espconn_delete(conn);
+    if(conn->proto.tcp != NULL) {
+        os_free(conn->proto.tcp);
+    }
+    os_free(conn);
 }
 
 static void error_cb(void* arg, sint8 err) {
@@ -128,47 +128,47 @@ static void ICACHE_FLASH_ATTR dns_cb(const char *name, ip_addr_t *ipaddr, void *
         espconn_regist_disconcb(conn,  disconnect_cb);
         espconn_regist_reconcb(conn,   error_cb);
         err = espconn_connect(conn);
-		if (err == ESPCONN_ISCONN) {
-			/* Already connected, so execute callback ourselves */
-			connect_cb(conn);
-		}
+        if (err == ESPCONN_ISCONN) {
+            /* Already connected, so execute callback ourselves */
+            connect_cb(conn);
+        }
 
     } else {
         os_printf("DNS Failed for %s\n", name);
 
         free(req->host);
-		free(req->path);
-		free(req->headers);
-		free(req->payload);
-		free(req);
+        free(req->path);
+        free(req->headers);
+        free(req->payload);
+        free(req);
     }
 
 }
 
 static void ICACHE_FLASH_ATTR request(const char* host, int port, const char* path, const char* headers, const char* payload) {
 
-	http_req_t *req = (http_req_t* ) malloc(sizeof(http_req_t));
-	req->host    = strdup(host);
-	req->path    = strdup(path);
-	req->port    = port;
-	req->headers = strdup(headers);
-	req->payload = strdup(payload);
+    http_req_t *req = (http_req_t* ) malloc(sizeof(http_req_t));
+    req->host    = strdup(host);
+    req->path    = strdup(path);
+    req->port    = port;
+    req->headers = strdup(headers);
+    req->payload = strdup(payload);
 
-	
+    
 
-	ip_addr_t addr;
+    ip_addr_t addr;
     /* Get IP of the host using DNS */
-	err_t error = espconn_gethostbyname((struct espconn *)req, host, &addr, dns_cb);
+    err_t error = espconn_gethostbyname((struct espconn *)req, host, &addr, dns_cb);
 
-	if (error == ESPCONN_INPROGRESS) {
+    if (error == ESPCONN_INPROGRESS) {
         os_printf("DNS request in progress for %s\n", host);
-	}
-	else if (error == ESPCONN_OK) {
-		dns_cb(host, &addr, req);
-	}
-	else {
-		dns_cb(host, NULL, req);
-	}
+    }
+    else if (error == ESPCONN_OK) {
+        dns_cb(host, &addr, req);
+    }
+    else {
+        dns_cb(host, NULL, req);
+    }
 
 }
 
