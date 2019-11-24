@@ -11,6 +11,7 @@ Since ESP8266 RTOS SDK doesn't support floating point formatting, the [tinystdio
 The measurements are sent to [ThingsBoard](demo.thingsboard.io "ThingsBoard"), which is an online IoT platform. 
 
 **Note**: for successfull compilation you need to create a file called "wifi_config.h" with your wifi credentials:
+
     #ifndef WIFI_CONFIG_H_
     #define WIFI_CONFIG_H
     
